@@ -1,0 +1,6 @@
+project_id = "clockin-production"
+
+[functions.attendance-api]
+# Requests are authenticated by LINE verification and opaque server sessions.
+# Supabase JWTs are not used by this application.
+verify_jwt = false
