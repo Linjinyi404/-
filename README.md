@@ -1,12 +1,12 @@
 # 到班正式版程式
 
-此專案包含 GitHub Pages 前端、Supabase Edge Function、PostgreSQL 資料庫 migration 與測試。**前端、資料庫與 API 已部署；真人 LINE 登入、手機定位、管理員與地點設定仍待完成，尚未完成正式出勤驗收。**
+此專案包含 GitHub Pages 前端、Supabase Edge Function、PostgreSQL 資料庫 migration 與測試。**前端、資料庫與 API 已部署，使用者已確認手機 LINE 登入成功；手機定位、管理員與地點設定仍待完成，尚未完成正式出勤驗收。**
 
 2026-10-15 已確認 [GitHub Pages](https://linjinyi404.github.io/-/) 發布成功，LIFF ID `2012025693-u2dzrOVz` 的 endpoint 已設為該網址，scope 為 `openid`、`profile`。LINE Login Channel ID 為 `2012025693`。Supabase 專案 `meregxzdfizybmnonfza` 已部署 `attendance-api`，遠端已設定 `LINE_CHANNEL_ID`、`ALLOWED_ORIGINS`，並依使用者確認關閉 legacy JWT gateway 驗證，改由程式驗證 LINE 憑證與短期 session。
 
 遠端六張資料表均啟用 RLS；anon/authenticated 無權直接執行資料 RPC，service_role 可執行。五項真實 API 檢查通過：health 200 且 configured=true、匿名 snapshot 401、無效 LINE 憑證 401、正式來源 CORS 204、不允許來源 403。這些檢查沒有建立員工或打卡資料。
 
-目前依使用者決定**先不指定管理員**，`BOOTSTRAP_LINE_SUB` 留空，所有新登入帳號先建立為一般員工。LINE Channel 仍為開發模式，測試帳號需要相應權限；公開與手機實測尚待完成。具體後續步驟請看 `建立服務步驟.md`。
+目前依使用者決定**先不指定管理員**，`BOOTSTRAP_LINE_SUB` 留空，所有新登入帳號先建立為一般員工。LINE Channel 仍為開發模式，測試帳號需要相應權限；公開與手機定位、出勤實測尚待完成。具體後續步驟請看 `建立服務步驟.md`。
 
 已依使用者決定實作：任何已驗證的 LINE 帳號可建立一般員工帳號、地點與班表不固定、地點半徑預設兩公里、哥與弟作為兩位管理員人選、管理員不能審核自己的補打卡。管理員身份以驗證後的 LINE subject 綁定，姓名不是授權依據。
 
