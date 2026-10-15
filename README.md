@@ -1,8 +1,12 @@
 # 到班正式版程式
 
-此專案包含 GitHub Pages 前端、Supabase Edge Function、PostgreSQL 資料庫 migration 與測試。**服務尚未設定與上線，不能現在就作為正式出勤系統。**
+此專案包含 GitHub Pages 前端、Supabase Edge Function、PostgreSQL 資料庫 migration 與測試。**前端、資料庫與 API 已部署；真人 LINE 登入、手機定位、管理員與地點設定仍待完成，尚未完成正式出勤驗收。**
 
-目前指定的儲存庫為 [Linjinyi404/-](https://github.com/Linjinyi404/-)，Supabase 專案識別碼為 `meregxzdfizybmnonfza`。公開 API 網址與 LIFF ID `2012025693-u2dzrOVz` 已填入。使用者確認的 LINE Login Channel ID 為 `2012025693`，已填入 `.env.example`，尚需設定遠端環境變數與部署 Supabase 函式。預期 Pages 網址為 `https://linjinyi404.github.io/-/`，必須以實際成功部署結果確認後再設定 LIFF endpoint。
+2026-10-15 已確認 [GitHub Pages](https://linjinyi404.github.io/-/) 發布成功，LIFF ID `2012025693-u2dzrOVz` 的 endpoint 已設為該網址，scope 為 `openid`、`profile`。LINE Login Channel ID 為 `2012025693`。Supabase 專案 `meregxzdfizybmnonfza` 已部署 `attendance-api`，遠端已設定 `LINE_CHANNEL_ID`、`ALLOWED_ORIGINS`，並依使用者確認關閉 legacy JWT gateway 驗證，改由程式驗證 LINE 憑證與短期 session。
+
+遠端六張資料表均啟用 RLS；anon/authenticated 無權直接執行資料 RPC，service_role 可執行。五項真實 API 檢查通過：health 200 且 configured=true、匿名 snapshot 401、無效 LINE 憑證 401、正式來源 CORS 204、不允許來源 403。這些檢查沒有建立員工或打卡資料。
+
+目前依使用者決定**先不指定管理員**，`BOOTSTRAP_LINE_SUB` 留空，所有新登入帳號先建立為一般員工。LINE Channel 仍為開發模式，測試帳號需要相應權限；公開與手機實測尚待完成。具體後續步驟請看 `建立服務步驟.md`。
 
 已依使用者決定實作：任何已驗證的 LINE 帳號可建立一般員工帳號、地點與班表不固定、地點半徑預設兩公里、哥與弟作為兩位管理員人選、管理員不能審核自己的補打卡。管理員身份以驗證後的 LINE subject 綁定，姓名不是授權依據。
 
@@ -29,6 +33,8 @@
 
 在新專案 SQL Editor 執行 migration **一次**。不要在已有同名資料表的專案重複執行。正式應用到遠端後，這份 migration 不再修改，未來調整追加新的 migration。
 
+**目前這個專案已在 2026-10-15 執行 `202610130001_attendance.sql` 成功，請勿重複執行；以下建立與部署指令供新環境或後續部署參考。**
+
 安裝 Supabase CLI 後，在這個資料夾執行（首次 CLI 登入與連結專案會要求你的帳號／資料庫設定）：
 
 ```powershell
@@ -49,7 +55,7 @@ Supabase Edge Function 通常自帶 `SUPABASE_URL` 與 API 金鑰。程式優先
 | `ALLOWED_ORIGINS` | GitHub Pages **來源**，例如 `https://帳號.github.io`，不含 repo 路徑；多個來源用逗號分隔 |
 | `BOOTSTRAP_LINE_SUB` | 哥的已確認 LINE user ID，作為唯一首位管理員候選。不得以姓名替代 |
 
-私有設計預覽用於檢視畫面。真實登入請在 GitHub／LIFF 正式 endpoint 驗收；如要另用預覽網域测试，需設定相符的測試 LIFF endpoint 與 API 允許來源。`.env.example` 只列名稱；真正密碼、service role key、Channel Secret 不進 GitHub、不放前端、不貼聊天。
+私有設計預覽用於檢視畫面。真實登入請在 GitHub／LIFF 正式 endpoint 驗收；如要另用預覽網域测试，需設定相符的測試 LIFF endpoint 與 API 允許來源。`.env.example` 列出名稱與已確認的公開設定，機密欄位留空；真正密碼、service role key、Channel Secret 不進 GitHub、不放前端、不貼聊天。
 
 ### 3. LINE Developers / LIFF
 
