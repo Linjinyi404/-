@@ -2,7 +2,7 @@
 
 此專案包含 GitHub Pages 前端、Supabase Edge Function、PostgreSQL 資料庫 migration 與測試。**服務尚未設定與上線，不能現在就作為正式出勤系統。**
 
-目前指定的儲存庫為 [Linjinyi404/-](https://github.com/Linjinyi404/-)，Supabase 專案識別碼為 `meregxzdfizybmnonfza`。公開 API 網址已預填，LIFF ID 仍待提供。預期 Pages 網址為 `https://linjinyi404.github.io/-/`，必須以實際成功部署結果確認後再設定 LIFF endpoint。
+目前指定的儲存庫為 [Linjinyi404/-](https://github.com/Linjinyi404/-)，Supabase 專案識別碼為 `meregxzdfizybmnonfza`。公開 API 網址與 LIFF ID `2012025693-u2dzrOVz` 已填入。使用者確認的 LINE Login Channel ID 為 `2012025693`，已填入 `.env.example`，尚需設定遠端環境變數與部署 Supabase 函式。預期 Pages 網址為 `https://linjinyi404.github.io/-/`，必須以實際成功部署結果確認後再設定 LIFF endpoint。
 
 已依使用者決定實作：任何已驗證的 LINE 帳號可建立一般員工帳號、地點與班表不固定、地點半徑預設兩公里、哥與弟作為兩位管理員人選、管理員不能審核自己的補打卡。管理員身份以驗證後的 LINE subject 綁定，姓名不是授權依據。
 
