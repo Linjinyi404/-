@@ -9,3 +9,5 @@
 .clock-art .hand{fill:none}.location-card .demo-controls .button{width:auto}.location-card .demo-controls{align-items:center}
 [hidden]{display:none!important}
 @media(max-width:600px){.sidebar .sidebar-bottom{display:flex;gap:6px;align-items:center}.sidebar-bottom .role-button{width:auto;padding:4px 8px}}
+
+.gps-coordinate{display:block;color:var(--muted);font-size:11px;line-height:1.6;overflow-wrap:anywhere;margin:4px 0}.location-card .location-result{margin-top:6px}

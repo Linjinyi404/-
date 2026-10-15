@@ -1,6 +1,6 @@
 # 到班正式版程式
 
-此專案包含 GitHub Pages 前端、Supabase Edge Function、PostgreSQL 資料庫 migration 與測試。**前端、資料庫與 API 已部署，使用者已確認手機 LINE 登入成功；手機定位、管理員與地點設定仍待完成，尚未完成正式出勤驗收。**
+此專案包含 GitHub Pages 前端、Supabase Edge Function、PostgreSQL 資料庫 migration 與測試。前端、資料庫與 API 已部署，使用者已確認自己與其他人的手機 LINE 登入成功。2026-10-15 改為**不限地點、保留必要 GPS 定位**；真實手機 GPS 與出勤仍需實測。
 
 2026-10-15 已確認 [GitHub Pages](https://linjinyi404.github.io/-/) 發布成功，LIFF ID `2012025693-u2dzrOVz` 的 endpoint 已設為該網址，scope 為 `openid`、`profile`。LINE Login Channel ID 為 `2012025693`。Supabase 專案 `meregxzdfizybmnonfza` 已部署 `attendance-api`，遠端已設定 `LINE_CHANNEL_ID`、`ALLOWED_ORIGINS`，並依使用者確認關閉 legacy JWT gateway 驗證，改由程式驗證 LINE 憑證與短期 session。
 
@@ -8,7 +8,7 @@
 
 目前依使用者決定**先不指定管理員**，`BOOTSTRAP_LINE_SUB` 留空，所有新登入帳號先建立為一般員工。LINE Channel 已在 2026-10-15 依使用者確認改為 Published；其他使用者可透過 LIFF 登入，一般員工不再需要 LINE 後台測試權限。手機定位與出勤實測尚待完成。具體後續步驟請看 `建立服務步驟.md`。
 
-已依使用者決定實作：任何已驗證的 LINE 帳號可建立一般員工帳號、地點與班表不固定、地點半徑預設兩公里、哥與弟作為兩位管理員人選、管理員不能審核自己的補打卡。管理員身份以驗證後的 LINE subject 綁定，姓名不是授權依據。
+已依使用者決定實作：任何已驗證的 LINE 帳號可建立一般員工帳號、不限打卡地點、班表不固定、保留每次打卡 GPS。哥與弟是未來管理員人選，目前不指定；管理員不能審核自己的補打卡。管理員身份以驗證後的 LINE subject 綁定，姓名不是授權依據。
 
 ## 檔案與設定
 
@@ -16,6 +16,7 @@
 - `frontend/config.js`：只放公開的 LIFF ID、API URL、公司名稱。
 - `supabase/functions/attendance-api/`：後端驗證 LINE ID token，發放 30 分鐘的隨機登入憑證。前端只在記憶體保存憑證，資料庫只保存憑證 SHA-256。
 - `supabase/migrations/202610130001_attendance.sql`：資料表、RLS 與交易 RPC。所有表對 anon/authenticated 預設拒絕，只授權伺服器執行受控 RPC。
+- `supabase/migrations/202610150002_unrestricted_gps.sql`：追加升級，取消地點／半徑限制，保存必要 GPS 與舊紀錄。兩份 migration 依檔名順序各執行一次；已套用的第一份不得重跑。
 - `.github/workflows/pages.yml`：正式儲存庫的 GitHub Pages 發布流程。
 - `tests/`：API 安全與 PostgreSQL 規則測試。
 
@@ -31,9 +32,9 @@
 
 到 [Supabase Dashboard](https://supabase.com/dashboard) 登入並建立專案。資料庫密碼自行保存，選擇適合團隊的區域與方案；正式出勤需另外安排備份與復原。免費方案適合先驗收，但沒有自動備份，低活動可能暫停。[方案說明](https://supabase.com/pricing)
 
-在新專案 SQL Editor 執行 migration **一次**。不要在已有同名資料表的專案重複執行。正式應用到遠端後，這份 migration 不再修改，未來調整追加新的 migration。
+新專案在 SQL Editor 依檔名順序執行所有 migrations，各一次。不要在已有同名資料表的專案重複執行首次建置。正式應用到遠端後，migration 不再修改，未來調整追加新的 migration。
 
-**目前這個專案已在 2026-10-15 執行 `202610130001_attendance.sql` 成功，請勿重複執行；以下建立與部署指令供新環境或後續部署參考。**
+目前這個專案已套用首次建置與 `202610150002_unrestricted_gps.sql`，請勿重複執行。升級以交易保留全部員工、出勤與審核資料；原 RPC 僅作為不可由 API 直接執行的內部相容實作。
 
 安裝 Supabase CLI 後，在這個資料夾執行（首次 CLI 登入與連結專案會要求你的帳號／資料庫設定）：
 
@@ -53,7 +54,7 @@ Supabase Edge Function 通常自帶 `SUPABASE_URL` 與 API 金鑰。程式優先
 | --- | --- |
 | `LINE_CHANNEL_ID` | LINE Login Channel 的公開 Channel ID |
 | `ALLOWED_ORIGINS` | GitHub Pages **來源**，例如 `https://帳號.github.io`，不含 repo 路徑；多個來源用逗號分隔 |
-| `BOOTSTRAP_LINE_SUB` | 哥的已確認 LINE user ID，作為唯一首位管理員候選。不得以姓名替代 |
+| `BOOTSTRAP_LINE_SUB` | 目前留空。未來確認首位管理員的 LINE user ID 後再設定；不得以姓名替代 |
 
 私有設計預覽用於檢視畫面。真實登入請在 GitHub／LIFF 正式 endpoint 驗收；如要另用預覽網域测试，需設定相符的測試 LIFF endpoint 與 API 允許來源。`.env.example` 列出名稱與已確認的公開設定，機密欄位留空；真正密碼、service role key、Channel Secret 不進 GitHub、不放前端、不貼聊天。
 
@@ -75,23 +76,23 @@ export const config = Object.freeze({
 
 以上是公開設定。前端未填設定時會顯示等待設定，登入與打卡按鈕會鎖定，不會假裝登入或把資料寫入本機。
 
-### 4. 哥、弟綁定與地點
+### 4. 之後指定管理員
 
 哥以 bootstrap 指定帳號登入後取得第一位管理員權限。弟以自己的 LINE 登入，先取得一般員工編號。哥到「管理工作區 → 員工與權限」，確認弟的員工編號與 LINE 尾碼後，將該帳號設為管理員；可以把顯示姓名改為「弟」。哥哥自己的補打卡只能由弟審核，反之亦然。
 
-到「打卡地點」新增實際中心點，可使用管理員目前位置填入座標，預設半徑 2,000 公尺。所有員工共用啟用地點。沒有啟用地點時拒絕正常打卡，仍可依規則申請補打卡。
+目前不指定管理員，也不需要建立打卡地點。一般員工取得有效 GPS 後即可在任何地方打卡；補打卡申請仍需等指定管理員後由其他人審核。舊地點設定與過去地點快照保留供歷史查閱，不再用來限制新打卡。
 
 ## 規則與資料
 
 - 正式打卡時間由資料庫 `clock_timestamp()` 產生，前端不能指定員工、角色、距離或成功旗標。
-- 定位精度上限 150 公尺，距離加精度誤差須在任一地點半徑內；位置需在五分鐘內，裝置時間超前超過 30 秒拒絕。
+- 每次新打卡仍強制取得 GPS 並保存座標、精度、定位取得時間；不查驗地點或半徑。定位精度上限 150 公尺，位置需在五分鐘內，裝置時間超前超過 30 秒拒絕。拒絕定位或定位失敗不會打卡成功。
 - 同一筆重試使用原 Idempotency-Key；同 key 不同內容拒絕，已有上班不能再上班，未上班不能下班。
 - 以資料庫交易與 advisory lock 保護這個小團隊的打卡、審核、地點與權限調整，避免角色變動和同時打卡競態。
 - 補打卡保存原申請，核准追加出勤；衝突序列拒絕且交易回滾，自己不能核准或退回自己的申請。
 - 地點版本與打卡時的快照保留；之後改地點不回溯修改歷史紀錄。
-- 員工只讀自己的資料；管理員讀全體、設定地點與權限；最後一位啟用管理員不能停用／降權。
+- 員工只讀自己的資料與 GPS；管理員讀全體並管理權限；最後一位啟用管理員不能停用／降權。
 - 查詢可選歷史日期，每次開始到結束最多相差 90 天、最多 10,000 筆。不會自動刪除資料；資料保存期限與復原政策需在正式啟用前訂定。
-- 前端 CSV 防止試算表公式注入；匯出時先由伺服器確認資料範圍並保存稽核。資料庫／稽核只由受控伺服器寫入。
+- 前端 CSV 保留原欄位並追加 GPS 緯度、GPS 經度、定位精度公尺，防止試算表公式注入；匯出時先由伺服器確認資料範圍並保存稽核。資料庫／稽核只由受控伺服器寫入。
 - 登入憑證不放 localStorage；重新整理後需要由 LINE 建立新 session。位置只在主動定位／打卡時取得。
 - 瀏覽器位置可以被模擬，後端驗算不能保證杜絕代打卡。
 
@@ -105,6 +106,6 @@ node --test tests/*.test.mjs
 node tools/serve.mjs
 ```
 
-本機預覽預設 `http://127.0.0.1:4174`。瀏覽器整合測試 `node tools/browser-qa.mjs` 另外需要 Playwright 與 Edge，可用 `PLAYWRIGHT_PATH`、`EDGE_PATH` 指定安裝位置。它使用模擬 LINE 回應、模擬座標和本機 PGlite，**不代表真實 LINE、Supabase 遠端部署或兩台手機的網路操作已驗收**。
+本機預覽預設 `http://127.0.0.1:4174`。新規則的瀏覽器驗證用 `node tools/gps-qa-server.mjs`，開啟 `http://127.0.0.1:4175`。這個獨立測試服務僅使用虛構 LINE 身分、模擬 GPS、記憶體 PGlite，不會連到正式後端或要求真實裝置定位；可在畫面切換雪梨座標、拒絕定位與精度不足。`tests/unrestricted-gps.test.mjs` 驗證升級與 GPS 保存、權限、重試及匯出；原 `database.test.mjs` 與 `tools/browser-qa.mjs` 保留第一版 geofence 的回歸基線。
 
 上線前仍需：iPhone / Android 的 LINE 登入與定位實測、停用／登出／過期登入、兩台手機同時打卡與超時重送、真實資料庫備份復原，以及哥弟互相審核。
