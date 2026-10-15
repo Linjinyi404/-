@@ -56,7 +56,7 @@ Supabase Edge Function 通常自帶 `SUPABASE_URL` 與 API 金鑰。程式優先
 | `ALLOWED_ORIGINS` | GitHub Pages **來源**，例如 `https://帳號.github.io`，不含 repo 路徑；多個來源用逗號分隔 |
 | `BOOTSTRAP_LINE_SUB` | 目前留空。未來確認首位管理員的 LINE user ID 後再設定；不得以姓名替代 |
 
-私有設計預覽用於檢視畫面。真實登入請在 GitHub／LIFF 正式 endpoint 驗收；如要另用預覽網域测试，需設定相符的測試 LIFF endpoint 與 API 允許來源。`.env.example` 列出名稱與已確認的公開設定，機密欄位留空；真正密碼、service role key、Channel Secret 不進 GitHub、不放前端、不貼聊天。
+私有設計預覽用於檢視畫面。真實登入請在 GitHub／LIFF 正式 endpoint 驗收；如要另用預覽網域测试，需設定相符的測試 LIFF endpoint 與 API 允許來源。公開設定見上表；真正密碼、service role key、Channel Secret 不進 GitHub、不放前端、不貼聊天。所有 `.env` 類檔案（含 example）均不追蹤，本機設定自行保存。
 
 ### 3. LINE Developers / LIFF
 
@@ -97,6 +97,14 @@ export const config = Object.freeze({
 - 瀏覽器位置可以被模擬，後端驗算不能保證杜絕代打卡。
 
 ## 本機驗證
+
+### 防止提交機密
+
+`.gitignore` 排除環境檔、密碼文件、私鑰／憑證、雲端登入資料、資料庫與出勤備份。公開的 Channel ID、LIFF ID 與 API URL 可以保留在前端設定；密碼和後端 secret 不可以。
+
+每次新複製儲存庫後，執行一次 `git config core.hooksPath .githooks` 啟用本機防護。pre-commit 只檢查待提交內容，pre-push 檢查 Git 歷史；檔名或常見金鑰格式命中即拒絕，輸出只含檔名、行號與規則名稱。GitHub Actions 另檢查追蹤檔與歷史。任何透過 API 建立提交的工具也必須在送出前執行同等檢查；API 不會執行本機 Git hooks。
+
+可手動執行 `node tools/check-secrets.mjs --staged`、`--tracked` 或 `--history`。掃描完全在本機／GitHub runner 執行，不上傳至第三方掃描服務。既有歷史僅允許兩份已核對、機密欄位空白的公開環境範例 blob；未來新增的環境檔一律阻擋。格式掃描不能識別任意文字中的所有密碼，仍須在提交前確認內容；若真實機密曾進入歷史，需撤銷／更換並另處理歷史，單加 ignore 無法撤回。
 
 測試需要 Node.js 22+ 與 pnpm（或自行使用 npm 安裝依賴）。正式前端與後端沒有 npm 執行依賴，PGlite 只用於測試。
 
